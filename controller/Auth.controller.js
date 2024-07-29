@@ -2,7 +2,6 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../model/User.model.js";
 import { config } from "dotenv";
-import uploadToCloudinary from "../config/cloudinary/config.js";
 
 config();
 
