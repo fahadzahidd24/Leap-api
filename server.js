@@ -4,7 +4,8 @@ import bodyParser from "body-parser";
 
 import DB from "./config/db/config.js";
 import authRoutes from "./router/auth.route.js";
-import userRoutes from "./router/user.route.js";
+import salestargetsRoutes from "./router/salestargets.route.js";
+import successformulaRoutes from "./router/successformula.route.js";
 import { config } from "dotenv";
 import { authenticate } from "./middleware/authenticate.js";
 
@@ -20,7 +21,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // defining the endpoints
 app.use("/api", authRoutes);
-app.use("/api", authenticate, userRoutes);
+app.use("/api", authenticate, salestargetsRoutes);
+app.use("/api", authenticate, successformulaRoutes);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
