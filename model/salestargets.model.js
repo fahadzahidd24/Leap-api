@@ -2,12 +2,12 @@ import mongoose from "mongoose";
 
 const salestargetsSchema = new mongoose.Schema({
     userId: { type: mongoose.Types.ObjectId, required: true, unique: true },
-    target: { type: Number, required: true },
-    casesize: {
+    salesTargets: { type: Number, required: true },
+    averageCaseSize: {
         type: Number,
         required: true
     },
-    weeks: {
+    numberOfWeeks: {
         type: Number,
         required: true,
     },
