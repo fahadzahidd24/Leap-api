@@ -1,33 +1,7 @@
 import PAS from "../model/pas.model.js";
-import { parseISO, startOfDay } from "date-fns";
+import moment from 'moment';
 import { addDays, isWithinInterval } from "date-fns";
 
-const generateChunks = (startDate, chunkSize) => {
-    const chunks = [];
-    let currentStartDate = startDate;
-
-    while (true) {
-        const chunk = {
-            start: currentStartDate,
-            end: addDays(currentStartDate, chunkSize - 1),
-        };
-        chunks.push(chunk);
-        currentStartDate = addDays(currentStartDate, chunkSize);
-
-        // Break if we have generated enough chunks or if the current start date is in the future
-        if (currentStartDate > new Date()) {
-            break;
-        }
-    }
-
-    return chunks;
-};
-
-const findCurrentChunk = (chunks, currentDate) => {
-    return chunks.find((chunk) =>
-        isWithinInterval(currentDate, { start: chunk.start, end: chunk.end })
-    );
-};
 
 export const setPAS = async (req, res) => {
     try {
@@ -109,19 +83,68 @@ export const getDailyPAS = async (req, res) => {
     }
 };
 
+// export const getWeeklyPAS = async (req, res) => {
+//     try {
+//         const userId = req.user._id;
+//         const { date } = req.query;
+
+//         // Find the document based on date and userId. Do week of Monday to Monday. Sum the values of p_weekly,a_weekly,s_weekly of the week. Also make sure, if entries are not completed for the week, provide sum until the current day
+
+
+//         return res.status(200).json({
+//             success: true,
+//             pas: {
+//                 p_weekly: 0,
+//                 a_weekly: 0,
+//                 s_weekly: 0,
+//             },
+//         });
+//     } catch (error) {
+//         console.error("Error fetching weekly PAS:", error);
+//         res.status(500).json({ success: false, message: "Internal server error" });
+//     }
+// };
+
+
 export const getWeeklyPAS = async (req, res) => {
     try {
         const userId = req.user._id;
         const { date } = req.query;
+        //date is like this DD/MM/YYYY
+        const startDate = moment(date, 'DD/MM/YYYY').startOf('isoWeek'); // Parse and get start of the week
+        const endDate = moment(date, 'DD/MM/YYYY').endOf('isoWeek'); // Parse and get end of the week
 
-        // Find the document based on date and userId
+        // Convert dates back to strings to match the database format
+        const startDateString = startDate.format('DD/MM/YYYY');
+        const endDateString = endDate.format('DD/MM/YYYY');
 
+        const entries = await PAS.find({
+            userId: userId,
+            date: {
+                $gte: startDateString,
+                $lte: endDateString,
+            },
+        });
+
+        // Initialize sum variables
+        let p_weekly = 0;
+        let a_weekly = 0;
+        let s_weekly = 0;
+
+        // Sum the values of p_weekly, a_weekly, and s_weekly
+        entries.forEach(entry => {
+            p_weekly += entry.p_daily || 0;
+            a_weekly += entry.a_daily || 0;
+            s_weekly += entry.s_daily || 0;
+        });
+
+        // Return the calculated PAS
         return res.status(200).json({
             success: true,
             pas: {
-                p_weekly: 0,
-                a_weekly: 0,
-                s_weekly: 0,
+                p_weekly,
+                a_weekly,
+                s_weekly,
             },
         });
     } catch (error) {
@@ -130,7 +153,6 @@ export const getWeeklyPAS = async (req, res) => {
     }
 };
 
-import mongoose from "mongoose";
 
 export const getAnnualPAS = async (req, res) => {
     try {

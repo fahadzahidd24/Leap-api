@@ -10,9 +10,9 @@ export function calculatePAS(
     const cases_per_week = total_cases / numberOfWeeks;
 
     const weekly_goals = {
-        p_weekly: Math.round(cases_per_week * prospectingApproach),
-        a_weekly: Math.round(cases_per_week * appointmentsKept),
-        s_weekly: Math.round(cases_per_week * salesSubmitted),
+        p_weekly: Math.ceil(cases_per_week * prospectingApproach),
+        a_weekly: Math.ceil(cases_per_week * appointmentsKept),
+        s_weekly: Math.ceil(cases_per_week * salesSubmitted),
     };
     const daily_goals = {
         p_daily: Math.round(weekly_goals.p_weekly / 5),
