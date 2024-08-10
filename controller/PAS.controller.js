@@ -1,12 +1,12 @@
 import PAS from "../model/pas.model.js";
 import moment from 'moment';
-import { addDays, isWithinInterval } from "date-fns";
 
 
 export const setPAS = async (req, res) => {
     try {
-        const { p_daily, a_daily, s_daily, premium_daily, date } = req.body;
+        const { p_daily, a_daily, s_daily, date } = req.body;
         const userId = req.user._id;
+
 
         // Find if there is an existing document with the provided date and userId
         let pasDocument = await PAS.findOne({ userId, date });
@@ -18,16 +18,14 @@ export const setPAS = async (req, res) => {
                 date,
                 p_daily: 0,
                 a_daily: 0,
-                s_daily: 0,
-                premium_daily: 0,
+                s_daily: []
             });
         }
 
         // Update the appropriate field
         if (p_daily !== undefined) pasDocument.p_daily = p_daily;
         if (a_daily !== undefined) pasDocument.a_daily = a_daily;
-        if (s_daily !== undefined) pasDocument.s_daily = s_daily;
-        if (premium_daily !== undefined) pasDocument.premium_daily = premium_daily;
+        if (s_daily !== undefined) pasDocument.s_daily.push(s_daily);
         // Save the updated document
         const savedPAS = await pasDocument.save();
 
@@ -39,9 +37,11 @@ export const setPAS = async (req, res) => {
             ...pasLeft
         } = savedPAS._doc;
 
+        const sumSDaily = pasLeft.s_daily.reduce((acc, curr) => acc + curr, 0);
+
         res.status(201).json({
             success: true,
-            pas: pasLeft,
+            pas: { ...pasLeft, s_daily: pasLeft.s_daily.length, premium_daily: sumSDaily },
         });
     } catch (error) {
         console.error("Error setting PAS:", error);
@@ -66,6 +66,7 @@ export const getDailyPAS = async (req, res) => {
                     p_daily: 0,
                     a_daily: 0,
                     s_daily: 0,
+                    premium_daily: 0
                 },
             });
         }
@@ -73,9 +74,11 @@ export const getDailyPAS = async (req, res) => {
         // Exclude unwanted fields
         const { __v: bs, _id: dd, userId: vv, date: zz, ...pasLeft } = pas._doc;
 
-        res.status(200).json({
+        const sumSDaily = pasLeft.s_daily.reduce((acc, curr) => acc + curr, 0);
+
+        res.status(201).json({
             success: true,
-            pas: pasLeft,
+            pas: { ...pasLeft, s_daily: pasLeft.s_daily.length, premium_daily: sumSDaily },
         });
     } catch (error) {
         console.error("Error fetching daily pas:", error);
@@ -112,7 +115,7 @@ export const getWeeklyPAS = async (req, res) => {
         entries.forEach(entry => {
             p_weekly += entry.p_daily || 0;
             a_weekly += entry.a_daily || 0;
-            s_weekly += entry.s_daily || 0;
+            s_weekly += entry.s_daily.length || 0;
         });
 
         // Return the calculated PAS
@@ -140,23 +143,19 @@ export const getAnnualPAS = async (req, res) => {
             {
                 $group: {
                     _id: null,
-                    totalPremiumYearly: { $sum: "$premium_daily" },
+                    totalPremiumYearly: { $sum: { $sum: "$s_daily" } },
                     p_yearly: { $sum: "$p_daily" },
                     a_yearly: { $sum: "$a_daily" },
-                    s_yearly: { $sum: "$s_daily" },
+                    s_yearly: { $sum: { $size: "$s_daily" } },
                 },
             }, // Sum the premium_daily values
         ]);
 
         // Extract the total value
-        const totalPremiumYearly =
-            result.length > 0 ? result[0].totalPremiumYearly : 0;
-        const p_yearly =
-            result.length > 0 ? result[0].p_yearly : 0;
-        const a_yearly =
-            result.length > 0 ? result[0].a_yearly : 0;
-        const s_yearly =
-            result.length > 0 ? result[0].s_yearly : 0;
+        const totalPremiumYearly = result.length > 0 ? result[0].totalPremiumYearly : 0;
+        const p_yearly = result.length > 0 ? result[0].p_yearly : 0;
+        const a_yearly = result.length > 0 ? result[0].a_yearly : 0;
+        const s_yearly = result.length > 0 ? result[0].s_yearly : 0;
 
         res.status(200).json({
             success: true,

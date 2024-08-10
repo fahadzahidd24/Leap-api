@@ -12,13 +12,9 @@ const pasSchema = new mongoose.Schema({
         default: 0
     },
     s_daily: {
-        type: Number,
-        default: 0
+        type: [Number],
+        default: []
     },
-    premium_daily: {
-        type: Number,
-        default: 0
-    }
 });
 
 const PAS = mongoose.model("PAS", pasSchema);
