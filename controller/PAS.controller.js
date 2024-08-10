@@ -83,29 +83,6 @@ export const getDailyPAS = async (req, res) => {
     }
 };
 
-// export const getWeeklyPAS = async (req, res) => {
-//     try {
-//         const userId = req.user._id;
-//         const { date } = req.query;
-
-//         // Find the document based on date and userId. Do week of Monday to Monday. Sum the values of p_weekly,a_weekly,s_weekly of the week. Also make sure, if entries are not completed for the week, provide sum until the current day
-
-
-//         return res.status(200).json({
-//             success: true,
-//             pas: {
-//                 p_weekly: 0,
-//                 a_weekly: 0,
-//                 s_weekly: 0,
-//             },
-//         });
-//     } catch (error) {
-//         console.error("Error fetching weekly PAS:", error);
-//         res.status(500).json({ success: false, message: "Internal server error" });
-//     }
-// };
-
-
 export const getWeeklyPAS = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -152,7 +129,6 @@ export const getWeeklyPAS = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
-
 
 export const getAnnualPAS = async (req, res) => {
     try {
