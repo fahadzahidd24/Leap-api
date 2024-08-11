@@ -41,7 +41,7 @@ export const setPAS = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            pas: { ...pasLeft, s_daily: pasLeft.s_daily.length, premium_daily: sumSDaily },
+            pas: { ...pasLeft, s_daily: pasLeft.s_daily, premium_daily: sumSDaily },
         });
     } catch (error) {
         console.error("Error setting PAS:", error);
@@ -65,7 +65,7 @@ export const getDailyPAS = async (req, res) => {
                 pas: {
                     p_daily: 0,
                     a_daily: 0,
-                    s_daily: 0,
+                    s_daily: [],
                     premium_daily: 0
                 },
             });
@@ -78,7 +78,7 @@ export const getDailyPAS = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            pas: { ...pasLeft, s_daily: pasLeft.s_daily.length, premium_daily: sumSDaily },
+            pas: { ...pasLeft, s_daily: pasLeft.s_daily, premium_daily: sumSDaily },
         });
     } catch (error) {
         console.error("Error fetching daily pas:", error);
@@ -110,12 +110,14 @@ export const getWeeklyPAS = async (req, res) => {
         let p_weekly = 0;
         let a_weekly = 0;
         let s_weekly = 0;
+        let totalPremiumWeekly = 0;
 
         // Sum the values of p_weekly, a_weekly, and s_weekly
         entries.forEach(entry => {
             p_weekly += entry.p_daily || 0;
             a_weekly += entry.a_daily || 0;
             s_weekly += entry.s_daily.length || 0;
+            totalPremiumWeekly += entry.s_daily.reduce((acc, curr) => acc + curr, 0);
         });
 
         // Return the calculated PAS
@@ -125,6 +127,7 @@ export const getWeeklyPAS = async (req, res) => {
                 p_weekly,
                 a_weekly,
                 s_weekly,
+                totalPremiumWeekly
             },
         });
     } catch (error) {
@@ -163,11 +166,54 @@ export const getAnnualPAS = async (req, res) => {
                 totalPremiumYearly,
                 p_yearly,
                 a_yearly,
-                s_yearly
+                s_yearly,
+                total_days: result.length || 0
             },
         });
     } catch (error) {
         console.error("Error fetching total premium daily:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+export const editDailyPAS = async (req, res) => {
+    try {
+        const { index, s_daily, date } = req.body;
+        const userId = req.user._id;
+
+        console.log(req.body)
+
+        // Find if there is an existing document with the provided date and userId
+        let pasDocument = await PAS.findOne({ userId, date });
+
+        // Update or remove the value at the specified index
+        if (s_daily == 0) {
+            // Remove the index from s_daily array if s_daily is 0
+            pasDocument.s_daily.splice(index, 1);
+        } else {
+            // Update the value at the specified index
+            pasDocument.s_daily[index] = s_daily;
+        }
+
+        // Save the updated document
+        const savedPAS = await pasDocument.save();
+
+        const {
+            __v,
+            _id,
+            userId: userIdRemoved,
+            date: dateRemoved,
+            ...pasLeft
+        } = savedPAS._doc;
+
+        const sumSDaily = pasLeft.s_daily.reduce((acc, curr) => acc + curr, 0);
+
+        res.status(201).json({
+            success: true,
+            pas: { ...pasLeft, s_daily: pasLeft.s_daily, premium_daily: sumSDaily },
+        });
+    } catch (error) {
+        console.error("Error setting PAS:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
