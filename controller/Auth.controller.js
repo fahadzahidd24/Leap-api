@@ -88,9 +88,8 @@ export const signup = async (req, res) => {
     await newUser.save();
 
     // Generate JWT token
-    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    // Generate JWT token that never expires
+    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET);
 
     res
       .status(200)
