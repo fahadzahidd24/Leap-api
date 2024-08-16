@@ -19,10 +19,24 @@ const httpServer = createServer(app);
 const io = new Server(httpServer);
 
 io.on("connection", (socket) => {
-  console.log(socket.id);
+  console.log(`User connected: ${socket.id}`);
+
+  // Listen for location updates from agents
+  socket.on("agentLocation", (locationData) => {
+    console.log(`Location received from ${socket.id}:`, locationData);
+    // Broadcast location to all connected managers
+    io.emit("managerReceiveLocation", locationData);
+  });
+
+  // Listen for chat messages
+  socket.on("chatMessage", (messageData) => {
+    console.log(`Message from ${socket.id}:`, messageData);
+    // Broadcast the message to all connected clients (or you can target specific users)
+    io.emit("receiveMessage", messageData);
+  });
 
   socket.on("disconnect", (reason) => {
-    console.log(`disconnect ${socket.id} due to ${reason}`);
+    console.log(`User disconnected: ${socket.id} due to ${reason}`);
   });
 });
 
@@ -40,10 +54,8 @@ app.use("/api", authenticate, entriesRoutes);
 app.use("/api", authenticate, pasRoutes);
 
 const PORT = process.env.PORT;
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
-
-httpServer.listen(PORT);
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 
 export default app;
