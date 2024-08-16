@@ -10,7 +10,23 @@ import pasRoutes from "./router/pas.router.js";
 import { config } from "dotenv";
 import { authenticate } from "./middleware/authenticate.js";
 
+import { createServer } from "http";
+import { Server } from "socket.io";
+
 const app = express();
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  path: "/location",
+});
+
+io.on("connection", (socket) => {
+  console.log(socket.id);
+
+  socket.on("disconnect", (reason) => {
+    console.log(`disconnect ${socket.id} due to ${reason}`);
+  });
+});
 
 DB();
 config();
@@ -26,8 +42,10 @@ app.use("/api", authenticate, entriesRoutes);
 app.use("/api", authenticate, pasRoutes);
 
 const PORT = process.env.PORT;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
+
+httpServer.listen(PORT);
 
 export default app;
