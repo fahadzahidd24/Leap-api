@@ -29,7 +29,11 @@ export const getInbox = async (req, res) => {
       participants: userId,
     })
       .sort({ "lastMessage.timestamp": -1 })
-      .select("participants lastMessage");
+      .select("participants lastMessage")
+      .populate({
+        path: "participants",
+        select: "fullName",
+      });
 
     // Format the response to include the other user and last message details
     const inbox = chats.map((chat) => {
@@ -37,7 +41,8 @@ export const getInbox = async (req, res) => {
         (participant) => participant !== userId
       );
       return {
-        otherUser,
+        otherUserId: otherUser._id,
+        otherUserName: otherUser.fullName,
         lastMessage: chat.lastMessage.content,
         timestamp: chat.lastMessage.timestamp,
       };
