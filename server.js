@@ -5,7 +5,9 @@ import bodyParser from "body-parser";
 import DB from "./config/db/config.js";
 import authRoutes from "./router/auth.route.js";
 import entriesRoutes from "./router/entries.route.js";
+import chatRoutes from "./router/chat.route.js";
 import pasRoutes from "./router/pas.router.js";
+import Chat from "./model/chat.model.js";
 
 import { config } from "dotenv";
 import { authenticate } from "./middleware/authenticate.js";
@@ -28,11 +30,39 @@ io.on("connection", (socket) => {
     io.emit("managerReceiveLocation", locationData);
   });
 
-  // Listen for chat messages
-  socket.on("chatMessage", (messageData) => {
-    console.log(`Message from ${socket.id}:`, messageData);
-    // Broadcast the message to all connected clients (or you can target specific users)
-    io.emit("receiveMessage", messageData);
+  socket.on("join", ({ userId1, userId2 }) => {
+    const chatId = [userId1, userId2].sort().join("-");
+    socket.join(chatId);
+    console.log(`User ${userId1} and ${userId2} joined the room ${chatId}`);
+  });
+
+  socket.on("send_message", async ({ userId1, userId2, sender, content }) => {
+    try {
+      const chatId = [userId1, userId2].sort().join("-");
+
+      let chat = await Chat.findOne({ chatId });
+
+      if (!chat) {
+        chat = new Chat({
+          chatId,
+          participants: [userId1, userId2],
+          messages: [{ sender, content, timestamp: new Date() }],
+          lastMessage: { content, timestamp: new Date() },
+        });
+      } else {
+        chat.messages.push({ sender, content, timestamp: new Date() });
+        chat.lastMessage = { content, timestamp: new Date() };
+      }
+      await chat.save();
+
+      io.to(chatId).emit(
+        "receive_message",
+        chat.messages[chat.messages.length - 1]
+      );
+      console.log(`Message sent and emitted to room ${chatId}`);
+    } catch (error) {
+      console.error("Error handling message:", error);
+    }
   });
 
   socket.on("disconnect", (reason) => {
@@ -50,6 +80,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // defining the endpoints
 app.use("/api", authRoutes);
+app.use("/api", authenticate, chatRoutes);
 app.use("/api", authenticate, entriesRoutes);
 app.use("/api", authenticate, pasRoutes);
 
