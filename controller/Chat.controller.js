@@ -38,8 +38,11 @@ export const getInbox = async (req, res) => {
     // Format the response to include the other user and last message details
     const inbox = chats.map((chat) => {
       const otherUser = chat.participants.find(
-        (participant) => participant !== userId
+        (participant) => participant._id.toString() != userId.toString()
       );
+
+      // console.log(otherUser);
+
       return {
         otherUserId: otherUser._id,
         otherUserName: otherUser.fullName,
