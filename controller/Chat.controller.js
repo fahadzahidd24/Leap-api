@@ -22,7 +22,7 @@ export const getMessages = async (req, res) => {
 
 export const getInbox = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     // Find chats where the current user is a participant
     const chats = await Chat.find({
