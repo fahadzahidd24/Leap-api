@@ -63,16 +63,16 @@ export const signup = async (req, res) => {
         .json({ success: false, message: "Email is already registered" });
     }
 
-    // Check if an admin already exists for the company (case-insensitive)
-    if (role === "admin") {
+    // Check if an supervisor already exists for the company (case-insensitive)
+    if (role === "supervisor") {
       const existingAdmin = await User.findOne({
         companyName: { $regex: new RegExp(`^${companyName}$`, "i") },
-        role: "admin",
+        role: "supervisor",
       });
       if (existingAdmin) {
         return res.status(400).json({
           success: false,
-          message: "An admin already exists for this company",
+          message: "A supervisor already exists for this company",
         });
       }
     }
