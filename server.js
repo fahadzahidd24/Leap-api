@@ -15,6 +15,7 @@ import { authenticate } from "./middleware/authenticate.js";
 
 import { createServer } from "http";
 import { Server } from "socket.io";
+import User from "./model/User.model.js";
 
 const app = express();
 
@@ -94,6 +95,26 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // defining the endpoints
+
+app.get("/api/agents", authenticate, async (req, res) => {
+  try {
+    const companyName = req.user.companyName;
+
+    const users = await User.find({
+      companyName: { $regex: new RegExp(`^${companyName}$`, "i") },
+    }).select("_id");
+
+    const userDetails = users.map((user) => {
+      return { id: user._id, fullName: user.fullName, email: user.email };
+    });
+
+    res.status(200).json(userDetails);
+  } catch (error) {
+    console.error("Error fetching agents:", error);
+    res.status(400).json({ message: "Error fetching agents", error });
+  }
+});
+
 app.use("/api", authRoutes);
 app.use("/api", eventRoutes);
 app.use("/api", authenticate, chatRoutes);
