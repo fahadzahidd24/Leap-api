@@ -7,6 +7,7 @@ import authRoutes from "./router/auth.route.js";
 import entriesRoutes from "./router/entries.route.js";
 import chatRoutes from "./router/chat.route.js";
 import pasRoutes from "./router/pas.router.js";
+import eventRoutes from "./router/event.route.js";
 import Chat from "./model/chat.model.js";
 
 import { config } from "dotenv";
@@ -80,6 +81,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // defining the endpoints
 app.use("/api", authRoutes);
+app.use("/api", eventRoutes);
 app.use("/api", authenticate, chatRoutes);
 app.use("/api", authenticate, entriesRoutes);
 app.use("/api", authenticate, pasRoutes);
