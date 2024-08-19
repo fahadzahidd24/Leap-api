@@ -1,4 +1,5 @@
 import Event from "../model/event.model.js";
+import User from "../model/User.model.js";
 
 // Create a new success formula and sales target
 export const createEvent = async (req, res) => {
@@ -35,11 +36,22 @@ export const getUserEvents = async (req, res) => {
 
 export const getAllEvents = async (req, res) => {
   try {
-    const events = await Event.find();
+    const companyName = req.user.companyName;
+
+    // Find all users with the same companyName (case-insensitive)
+    const users = await User.find({
+      companyName: { $regex: new RegExp(`^${companyName}$`, "i") },
+    }).select("_id");
+
+    // Extract userIds from the users
+    const userIds = users.map((user) => user._id);
+
+    // Find all events belonging to the users with the same companyName
+    const events = await Event.find({ userId: { $in: userIds } });
+
     res.status(200).json(events);
   } catch (error) {
-    console.error("Error fetching entries:", error);
-
+    console.error("Error fetching events:", error);
     res.status(400).json({ message: "Error fetching events", error });
   }
 };

@@ -25,10 +25,24 @@ io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
 
   // Listen for location updates from agents
+
+  socket.on("joinCompanyRoom", (companyName) => {
+    const normalizedCompanyName = companyName.toLowerCase();
+    socket.join(normalizedCompanyName);
+
+    console.log(`Socket ${socket.id} joined room: ${normalizedCompanyName}`);
+  });
+
   socket.on("agentLocation", (locationData) => {
-    console.log(`Location received from ${socket.id}:`, locationData);
+    console.log(
+      `Location received from ${socket.id} in ${normalizedCompanyName}:`,
+      locationData
+    );
+
+    const normalizedCompanyName = locationData.companyName.toLowerCase();
+
     // Broadcast location to all connected managers
-    io.emit("managerReceiveLocation", locationData);
+    io.to(normalizedCompanyName).emit("managerReceiveLocation", locationData);
   });
 
   socket.on("join", ({ userId1, userId2 }) => {

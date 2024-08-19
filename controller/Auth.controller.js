@@ -53,7 +53,7 @@ export const login = async (req, res) => {
 
 export const signup = async (req, res) => {
   try {
-    const { fullName, email, password, role } = req.body;
+    const { fullName, email, password, role, companyName } = req.body;
 
     // Check if the email is already registered
     const existingUser = await User.findOne({ email });
@@ -61,6 +61,20 @@ export const signup = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Email is already registered" });
+    }
+
+    // Check if an admin already exists for the company (case-insensitive)
+    if (role === "admin") {
+      const existingAdmin = await User.findOne({
+        companyName: { $regex: new RegExp(`^${companyName}$`, "i") },
+        role: "admin",
+      });
+      if (existingAdmin) {
+        return res.status(400).json({
+          success: false,
+          message: "An admin already exists for this company",
+        });
+      }
     }
 
     const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
@@ -82,18 +96,19 @@ export const signup = async (req, res) => {
       email,
       password: hashedPassword,
       role,
+      companyName,
     });
 
     // Save the new user to the database
     await newUser.save();
 
     // Generate JWT token
-    // Generate JWT token that never expires
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET);
 
-    res
-      .status(200)
-      .json({ success: true, user: { token, ...stripPassword(newUser._doc) } });
+    res.status(200).json({
+      success: true,
+      user: { token, ...stripPassword(newUser._doc) },
+    });
   } catch (error) {
     console.error("Error during signup:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
