@@ -23,8 +23,8 @@ const EventSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["not started", "started", "pending", "completed"],
-    default: "not started",
+    enum: ["Pending", "Completed", "Started"],
+    default: "Pending",
   },
   createdAt: {
     type: Date,
