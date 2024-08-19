@@ -100,13 +100,17 @@ app.get("/api/agents", authenticate, async (req, res) => {
   try {
     const companyName = req.user.companyName;
 
+    // Find users within the same company with a role other than "supervisor"
     const users = await User.find({
       companyName: { $regex: new RegExp(`^${companyName}$`, "i") },
-    }).select("_id");
+      role: { $ne: "supervisor" }, // Exclude supervisors
+    }).select("_id fullName email");
 
-    const userDetails = users.map((user) => {
-      return { id: user._id, fullName: user.fullName, email: user.email };
-    });
+    const userDetails = users.map((user) => ({
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+    }));
 
     res.status(200).json(userDetails);
   } catch (error) {
