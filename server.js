@@ -35,12 +35,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("agentLocation", (locationData) => {
+    const normalizedCompanyName = locationData.companyName.toLowerCase();
+
     console.log(
       `Location received from ${socket.id} in ${normalizedCompanyName}:`,
       locationData
     );
-
-    const normalizedCompanyName = locationData.companyName.toLowerCase();
 
     // Broadcast location to all connected managers
     io.to(normalizedCompanyName).emit("managerReceiveLocation", locationData);
