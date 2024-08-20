@@ -34,6 +34,17 @@ export const getUserEvents = async (req, res) => {
   }
 };
 
+export const getUserEventsByIds = async (req, res) => {
+  try {
+    const events = await Event.find({ userId: req.params.userId });
+    res.status(200).json(events);
+  } catch (error) {
+    console.error("Error fetching entries:", error);
+
+    res.status(400).json({ message: "Error fetching events", error });
+  }
+};
+
 export const getAllEvents = async (req, res) => {
   try {
     const companyName = req.user.companyName;

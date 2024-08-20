@@ -1,7 +1,10 @@
 // routes/eventRoutes.js
 
 import express from "express";
-import { getAllEvents } from "../controller/Event.controller.js";
+import {
+  getAllEvents,
+  getUserEventsByIds,
+} from "../controller/Event.controller.js";
 import { getUserEvents } from "../controller/Event.controller.js";
 import { createEvent } from "../controller/Event.controller.js";
 import { updateEvent } from "../controller/Event.controller.js";
@@ -15,6 +18,8 @@ router.get("/events", getAllEvents);
 
 // Get a single event by ID
 router.get("/events/user", authenticate, getUserEvents);
+
+router.get("/events/user/:userId", authenticate, getUserEventsByIds);
 
 // Create a new event
 router.post("/event", authenticate, createEvent);
