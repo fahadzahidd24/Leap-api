@@ -12,7 +12,16 @@ export const authenticate = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(" ")[1];
       const decode = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decode.userId);
+      const user = await User.findById(decode.userId);
+
+      if (user) {
+        req.user = user;
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Invalid Authentication Token" });
+      }
+
       next();
     } catch (error) {
       res

@@ -7,6 +7,7 @@ import authRoutes from "./router/auth.route.js";
 import entriesRoutes from "./router/entries.route.js";
 import chatRoutes from "./router/chat.route.js";
 import pasRoutes from "./router/pas.router.js";
+import locationRoutes from "./router/location.route.js";
 import eventRoutes from "./router/event.route.js";
 import Chat from "./model/chat.model.js";
 
@@ -28,14 +29,14 @@ io.on("connection", (socket) => {
   // Listen for location updates from agents
 
   socket.on("joinCompanyRoom", (companyName) => {
-    const normalizedCompanyName = companyName.toLowerCase();
+    const normalizedCompanyName = companyName?.toLowerCase();
     socket.join(normalizedCompanyName);
 
     console.log(`Socket ${socket.id} joined room: ${normalizedCompanyName}`);
   });
 
   socket.on("agentLocation", (locationData) => {
-    const normalizedCompanyName = locationData.companyName.toLowerCase();
+    const normalizedCompanyName = locationData?.companyName?.toLowerCase();
 
     console.log(
       `Location received from ${socket.id} in ${normalizedCompanyName}:`,
@@ -124,6 +125,7 @@ app.use("/api", eventRoutes);
 app.use("/api", authenticate, chatRoutes);
 app.use("/api", authenticate, entriesRoutes);
 app.use("/api", authenticate, pasRoutes);
+app.use("/api", authenticate, locationRoutes);
 
 const PORT = process.env.PORT;
 httpServer.listen(PORT, () => {
