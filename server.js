@@ -145,6 +145,7 @@ app.get("/api/fetch-events/:userId", authenticate, async (req, res) => {
       startTime: event?.start?.dateTime,
       endTime: event?.end?.dateTime,
       status: event?.status,
+      source: "google",
     }));
 
     const events = await Event.find({ userId: req.params.userId });
