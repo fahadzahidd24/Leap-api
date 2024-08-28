@@ -10,13 +10,16 @@ import pasRoutes from "./router/pas.router.js";
 import locationRoutes from "./router/location.route.js";
 import eventRoutes from "./router/event.route.js";
 import Chat from "./model/chat.model.js";
+import RefreshTokens from "./model/refreshTokens.model.js";
 
 import { config } from "dotenv";
 import { authenticate } from "./middleware/authenticate.js";
+import { google } from "googleapis";
 
 import { createServer } from "http";
 import { Server } from "socket.io";
 import User from "./model/User.model.js";
+import Event from "./model/event.model.js";
 
 const app = express();
 
@@ -37,11 +40,6 @@ io.on("connection", (socket) => {
 
   socket.on("agentLocation", (locationData) => {
     const normalizedCompanyName = locationData?.companyName?.toLowerCase();
-
-    console.log(
-      `Location received from ${socket.id} in ${normalizedCompanyName}:`,
-      locationData
-    );
 
     // Broadcast location to all connected managers
     io.to(normalizedCompanyName).emit("managerReceiveLocation", locationData);
@@ -96,6 +94,115 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // defining the endpoints
+
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = `${process.env.SERVER_URL}/auth/google/callback`;
+
+const oauth2Client = new google.auth.OAuth2(
+  CLIENT_ID,
+  CLIENT_SECRET,
+  REDIRECT_URI
+);
+
+async function refreshAccessToken(refreshToken) {
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+  const { credentials } = await oauth2Client.refreshAccessToken();
+  return credentials.access_token;
+}
+
+app.get("/api/fetch-events/:userId", authenticate, async (req, res) => {
+  try {
+    // Assume you have stored the user's refresh token securely
+
+    const userId = req.params.userId;
+
+    const tokenData = await RefreshTokens.findOne({ userId });
+
+    if (!tokenData) {
+      return res.status(400).json({
+        success: false,
+        message: "User Not Authorized to Google Calendar",
+      });
+    }
+
+    // Get a new access token using the refresh token
+    const accessToken = await refreshAccessToken(tokenData.refreshToken);
+    oauth2Client.setCredentials({ access_token: accessToken });
+
+    const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+    const googleEvents = await calendar.events.list({
+      calendarId: "primary",
+      timeMin: new Date().toISOString(),
+      maxResults: 10,
+      singleEvents: true,
+      orderBy: "startTime",
+    });
+
+    const transformedData = googleEvents?.data?.items?.map((event) => ({
+      title: event?.summary,
+      description: event?.description,
+      startTime: event?.start?.dateTime,
+      endTime: event?.end?.dateTime,
+      status: event?.status,
+    }));
+
+    const events = await Event.find({ userId: req.params.userId });
+
+    const combinedEvents = [...transformedData, ...events];
+
+    res.status(200).json(combinedEvents);
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    res.status(500).send("Error retrieving events");
+  }
+});
+
+app.get("/api/auth/google", authenticate, (req, res) => {
+  try {
+    const userId = req.user._id.toString();
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: "offline",
+      scope: ["https://www.googleapis.com/auth/calendar.readonly"],
+      prompt: "consent",
+      state: userId,
+    });
+    res.json({ authUrl });
+  } catch (error) {
+    console.error("Error generating url", error);
+    res.status(400).json({
+      success: false,
+      message: "An error occurred while creating auth url",
+    });
+  }
+});
+
+app.get("/auth/google/callback", async (req, res) => {
+  const code = req.query.code;
+  const userId = req.query.state;
+  try {
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+
+    const { refresh_token } = tokens;
+
+    if (refresh_token) {
+      const refreshToken = new RefreshTokens({
+        userId,
+        refreshToken: refresh_token,
+      });
+      await refreshToken.save();
+      res
+        .status(200)
+        .send("Authorization Successfull. You can now open the app.");
+    } else {
+      throw new Error("Unable to retrieve access token");
+    }
+  } catch (error) {
+    console.error("Error fetching Google Calendar events:", error);
+    res.status(500).send("Error retrieving events");
+  }
+});
 
 app.get("/api/agents", authenticate, async (req, res) => {
   try {
