@@ -21,8 +21,6 @@ router.post("/location", async (req, res) => {
     // Save the location to the database
     await newLocation.save();
 
-    console.log(newLocation);
-
     res
       .status(201)
       .json({ message: "Location saved successfully", location: newLocation });
