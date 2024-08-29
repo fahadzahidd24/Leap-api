@@ -9,6 +9,8 @@ import chatRoutes from "./router/chat.route.js";
 import pasRoutes from "./router/pas.router.js";
 import locationRoutes from "./router/location.route.js";
 import eventRoutes from "./router/event.route.js";
+import improvementPlansRoutes from "./router/improvementPlans.route.js";
+
 import Chat from "./model/chat.model.js";
 import RefreshTokens from "./model/refreshTokens.model.js";
 
@@ -20,6 +22,9 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import User from "./model/User.model.js";
 import Event from "./model/event.model.js";
+
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 
@@ -87,6 +92,11 @@ io.on("connection", (socket) => {
 
 DB();
 config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 app.use(cors());
 app.use(express.json());
@@ -234,6 +244,7 @@ app.use("/api", authenticate, chatRoutes);
 app.use("/api", authenticate, entriesRoutes);
 app.use("/api", authenticate, pasRoutes);
 app.use("/api", authenticate, locationRoutes);
+app.use("/api", authenticate, improvementPlansRoutes);
 
 const PORT = process.env.PORT;
 httpServer.listen(PORT, () => {

@@ -54,6 +54,7 @@ export const login = async (req, res) => {
 export const signup = async (req, res) => {
   try {
     const { fullName, email, password, role, companyName } = req.body;
+    const profilePic = req.file;
 
     // Check if the email is already registered
     const existingUser = await User.findOne({ email });
@@ -90,6 +91,8 @@ export const signup = async (req, res) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const profilePicPath = profilePic ? `/uploads/${profilePic.filename}` : "";
+
     // Create a new user
     const newUser = new User({
       fullName,
@@ -97,6 +100,7 @@ export const signup = async (req, res) => {
       password: hashedPassword,
       role,
       companyName,
+      profilePic: profilePicPath,
     });
 
     // Save the new user to the database
