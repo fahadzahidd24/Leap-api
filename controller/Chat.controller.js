@@ -14,9 +14,9 @@ export const getMessages = async (req, res) => {
       return res.status(404).json({ error: "Chat not found" });
     }
 
-    res.status(200).json(chat.messages);
+    return res.status(200).json(chat.messages);
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -51,9 +51,9 @@ export const getInbox = async (req, res) => {
       };
     });
 
-    res.status(200).json(inbox);
+    return res.status(200).json(inbox);
   } catch (error) {
     console.error("Error fetching inbox:", error);
-    res.status(500).json({ error: "Failed to fetch inbox" });
+    return res.status(500).json({ error: "Failed to fetch inbox" });
   }
 };

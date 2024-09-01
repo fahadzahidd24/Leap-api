@@ -39,7 +39,7 @@ export const login = async (req, res) => {
     }
     // Generate JWT token
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
+      expiresIn: "30d",
     });
 
     res
@@ -47,7 +47,9 @@ export const login = async (req, res) => {
       .json({ success: true, user: { token, ...stripPassword(user._doc) } });
   } catch (error) {
     console.error("Error during login:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -107,15 +109,20 @@ export const signup = async (req, res) => {
     await newUser.save();
 
     // Generate JWT token
-    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET);
 
-    res.status(200).json({
+    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "30d",
+    });
+
+    return res.status(200).json({
       success: true,
       user: { token, ...stripPassword(newUser._doc) },
     });
   } catch (error) {
     console.error("Error during signup:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -132,12 +139,14 @@ export const forgotPassword = async (req, res) => {
     }
     // Generate and send password reset token
     // (Implementation of sending email with reset link goes here)
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Password reset token sent successfully",
     });
   } catch (error) {
     console.error("Error during forgot password:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };

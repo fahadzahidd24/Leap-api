@@ -37,13 +37,15 @@ export const setPAS = async (req, res) => {
 
     const sumSDaily = pasLeft.s_daily.reduce((acc, curr) => acc + curr, 0);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       pas: { ...pasLeft, s_daily: pasLeft.s_daily, premium_daily: sumSDaily },
     });
   } catch (error) {
     console.error("Error setting PAS:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -74,13 +76,15 @@ export const getDailyPAS = async (req, res) => {
 
     const sumSDaily = pasLeft.s_daily.reduce((acc, curr) => acc + curr, 0);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       pas: { ...pasLeft, s_daily: pasLeft.s_daily, premium_daily: sumSDaily },
     });
   } catch (error) {
     console.error("Error fetching daily pas:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -130,7 +134,9 @@ export const getWeeklyPAS = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching weekly PAS:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -159,7 +165,7 @@ export const getAnnualPAS = async (req, res) => {
     const a_yearly = result.length > 0 ? result[0].a_yearly : 0;
     const s_yearly = result.length > 0 ? result[0].s_yearly : 0;
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       pas: {
         totalPremiumYearly,
@@ -171,7 +177,9 @@ export const getAnnualPAS = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching total premium daily:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -205,12 +213,14 @@ export const editDailyPAS = async (req, res) => {
 
     const sumSDaily = pasLeft.s_daily.reduce((acc, curr) => acc + curr, 0);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       pas: { ...pasLeft, s_daily: pasLeft.s_daily, premium_daily: sumSDaily },
     });
   } catch (error) {
     console.error("Error setting PAS:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
