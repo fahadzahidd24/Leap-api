@@ -136,10 +136,16 @@ app.get("/api/fetch-events/:userId", authenticate, async (req, res) => {
       const accessToken = await refreshAccessToken(tokenData.refreshToken);
       oauth2Client.setCredentials({ access_token: accessToken });
 
+      const now = new Date();
+      const past30Days = new Date();
+      past30Days.setDate(now.getDate() - 30); // Set to 30 days in the past
+
       const calendar = google.calendar({ version: "v3", auth: oauth2Client });
       const googleEvents = await calendar.events.list({
         calendarId: "primary",
         orderBy: "startTime",
+        timeMin: past30Days.toISOString(), // 30 days in the past
+        singleEvents: true, // Expands recurring events into instances
       });
 
       const transformedData = googleEvents?.data?.items?.map((event) => ({
