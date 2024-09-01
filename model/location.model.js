@@ -22,6 +22,10 @@ const agentLocationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  profilePic: {
+    type: String,
+    required: true,
+  },
 });
 
 const AgentLocation = mongoose.model("AgentLocation", agentLocationSchema);
