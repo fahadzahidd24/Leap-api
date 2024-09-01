@@ -159,9 +159,11 @@ app.get("/api/fetch-events/:userId", authenticate, async (req, res) => {
 
       const combinedEvents = [...transformedData, ...events];
 
-      return res.status(200).json(combinedEvents);
+      return res
+        .status(200)
+        .json({ success: true, events: combinedEvents, isGoogle: true });
     }
-    return res.status(200).json(events);
+    return res.status(200).json({ success: true, events, isGoogle: false });
   } catch (error) {
     console.error("Error fetching events:", error);
     return res.status(500).send("Error retrieving events");
