@@ -127,42 +127,35 @@ app.get("/api/fetch-events/:userId", authenticate, async (req, res) => {
 
     const userId = req.params.userId;
 
-    const tokenData = await RefreshTokens.findOne({ userId });
-
-    if (!tokenData) {
-      return res.status(400).json({
-        success: false,
-        message: "User Not Authorized to Google Calendar",
-      });
-    }
-
-    // Get a new access token using the refresh token
-    const accessToken = await refreshAccessToken(tokenData.refreshToken);
-    oauth2Client.setCredentials({ access_token: accessToken });
-
-    const calendar = google.calendar({ version: "v3", auth: oauth2Client });
-    const googleEvents = await calendar.events.list({
-      calendarId: "primary",
-      timeMin: new Date().toISOString(),
-      maxResults: 10,
-      singleEvents: true,
-      orderBy: "startTime",
-    });
-
-    const transformedData = googleEvents?.data?.items?.map((event) => ({
-      title: event?.summary,
-      description: event?.description,
-      startTime: event?.start?.dateTime,
-      endTime: event?.end?.dateTime,
-      status: event?.status,
-      source: "google",
-    }));
-
     const events = await Event.find({ userId: req.params.userId });
 
-    const combinedEvents = [...transformedData, ...events];
+    const tokenData = await RefreshTokens.findOne({ userId });
 
-    return res.status(200).json(combinedEvents);
+    if (tokenData) {
+      // Get a new access token using the refresh token
+      const accessToken = await refreshAccessToken(tokenData.refreshToken);
+      oauth2Client.setCredentials({ access_token: accessToken });
+
+      const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+      const googleEvents = await calendar.events.list({
+        calendarId: "primary",
+        orderBy: "startTime",
+      });
+
+      const transformedData = googleEvents?.data?.items?.map((event) => ({
+        title: event?.summary,
+        description: event?.description,
+        startTime: event?.start?.dateTime,
+        endTime: event?.end?.dateTime,
+        status: event?.status,
+        source: "google",
+      }));
+
+      const combinedEvents = [...transformedData, ...events];
+
+      return res.status(200).json(combinedEvents);
+    }
+    return res.status(200).json(events);
   } catch (error) {
     console.error("Error fetching events:", error);
     return res.status(500).send("Error retrieving events");
