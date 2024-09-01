@@ -7,6 +7,10 @@ const improvementSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  subTitle: {
+    type: String,
+    required: true,
+  },
   description: {
     type: String,
     required: true,

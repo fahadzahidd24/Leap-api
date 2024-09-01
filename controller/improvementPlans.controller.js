@@ -3,20 +3,23 @@ import ImprovementPlans from "../model/improvementPlans.model.js";
 // CREATE: Add a new improvement plan
 export const createImprovementPlan = async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { title, subTitle, description } = req.body;
     const userId = req.user._id; // Assuming `req.user._id` has the userId
 
     const newPlan = new ImprovementPlans({
       userId,
       title,
+      subTitle,
       description,
     });
 
     await newPlan.save();
-    res.status(201).json({ success: true, plan: newPlan });
+    return res.status(201).json({ success: true, plan: newPlan });
   } catch (error) {
     console.error("Error creating improvement plan:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -27,10 +30,12 @@ export const getImprovementPlans = async (req, res) => {
 
     const plans = await ImprovementPlans.find({ userId });
 
-    res.status(200).json({ success: true, plans });
+    return res.status(200).json({ success: true, plans });
   } catch (error) {
     console.error("Error fetching improvement plans:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -53,10 +58,12 @@ export const updateImprovementPlan = async (req, res) => {
         .json({ success: false, message: "Improvement plan not found" });
     }
 
-    res.status(200).json({ success: true, plan: updatedPlan });
+    return res.status(200).json({ success: true, plan: updatedPlan });
   } catch (error) {
     console.error("Error updating improvement plan:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -77,12 +84,14 @@ export const deleteImprovementPlan = async (req, res) => {
         .json({ success: false, message: "Improvement plan not found" });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Improvement plan deleted successfully",
     });
   } catch (error) {
     console.error("Error deleting improvement plan:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
