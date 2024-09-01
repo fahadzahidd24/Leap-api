@@ -162,10 +162,10 @@ app.get("/api/fetch-events/:userId", authenticate, async (req, res) => {
 
     const combinedEvents = [...transformedData, ...events];
 
-    res.status(200).json(combinedEvents);
+    return res.status(200).json(combinedEvents);
   } catch (error) {
     console.error("Error fetching events:", error);
-    res.status(500).send("Error retrieving events");
+    return res.status(500).send("Error retrieving events");
   }
 });
 
@@ -178,10 +178,10 @@ app.get("/api/auth/google", authenticate, (req, res) => {
       prompt: "consent",
       state: userId,
     });
-    res.json({ authUrl });
+    return res.json({ authUrl });
   } catch (error) {
     console.error("Error generating url", error);
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: "An error occurred while creating auth url",
     });
@@ -203,15 +203,13 @@ app.get("/auth/google/callback", async (req, res) => {
         refreshToken: refresh_token,
       });
       await refreshToken.save();
-      res
-        .status(200)
-        .send("Authorization Successfull. You can now open the app.");
+      res.redirect("exp://192.168.100.202:8081");
     } else {
       throw new Error("Unable to retrieve access token");
     }
   } catch (error) {
     console.error("Error fetching Google Calendar events:", error);
-    res.status(500).send("Error retrieving events");
+    return res.status(500).send("Error retrieving events");
   }
 });
 
@@ -231,10 +229,10 @@ app.get("/api/agents", authenticate, async (req, res) => {
       email: user.email,
     }));
 
-    res.status(200).json(userDetails);
+    return res.status(200).json(userDetails);
   } catch (error) {
     console.error("Error fetching agents:", error);
-    res.status(400).json({ message: "Error fetching agents", error });
+    return res.status(400).json({ message: "Error fetching agents", error });
   }
 });
 
@@ -244,7 +242,7 @@ app.use("/api", authenticate, chatRoutes);
 app.use("/api", authenticate, entriesRoutes);
 app.use("/api", authenticate, pasRoutes);
 app.use("/api", authenticate, locationRoutes);
-app.use("/api", authenticate, improvementPlansRoutes);
+app.use("/api/improvementplan", authenticate, improvementPlansRoutes);
 
 const PORT = process.env.PORT;
 httpServer.listen(PORT, () => {
