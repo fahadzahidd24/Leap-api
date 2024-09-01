@@ -172,11 +172,12 @@ app.get("/api/fetch-events/:userId", authenticate, async (req, res) => {
 app.get("/api/auth/google", authenticate, (req, res) => {
   try {
     const userId = req.user._id.toString();
+    const { redirect } = req.query;
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: "offline",
       scope: ["https://www.googleapis.com/auth/calendar.readonly"],
       prompt: "consent",
-      state: userId,
+      state: `${userId},${redirect}`,
     });
     return res.json({ authUrl });
   } catch (error) {
@@ -190,7 +191,8 @@ app.get("/api/auth/google", authenticate, (req, res) => {
 
 app.get("/auth/google/callback", async (req, res) => {
   const code = req.query.code;
-  const userId = req.query.state;
+  const state = req.query.state;
+  const [userId, redirect] = state.split(",");
   try {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
@@ -203,13 +205,13 @@ app.get("/auth/google/callback", async (req, res) => {
         refreshToken: refresh_token,
       });
       await refreshToken.save();
-      res.redirect("exp://192.168.100.202:8081");
+      return res.redirect(`${redirect}?state=true`);
     } else {
       throw new Error("Unable to retrieve access token");
     }
   } catch (error) {
     console.error("Error fetching Google Calendar events:", error);
-    return res.status(500).send("Error retrieving events");
+    return res.redirect(`${redirect}?state=false`);
   }
 });
 
