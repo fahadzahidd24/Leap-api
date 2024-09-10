@@ -73,7 +73,7 @@ export const createEntries = async (req, res) => {
 // Get the success formula and sales targets for the current date for the user
 export const getEntries = async (req, res) => {
   try {
-    const userId = req.user._id; // Get userId from req.user
+    const userId = req.params?.agentId || req.user._id; // Get userId from req.user
 
     const successFormula = await SuccessFormula.findOne({ userId });
     const salesTargets = await SalesTargets.findOne({ userId });
