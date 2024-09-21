@@ -1,6 +1,7 @@
 import SuccessFormula from "../model/successformula.model.js";
 import SalesTargets from "../model/salestargets.model.js";
 import PAS from "../model/pas.model.js";
+import User from "../model/User.model.js";
 import { getCurrentDate } from "../utils/Date.js";
 import { calculatePAS } from "../utils/calculatePAS.js";
 
@@ -78,6 +79,7 @@ export const getEntries = async (req, res) => {
 
     const successFormula = await SuccessFormula.findOne({ userId });
     const salesTargets = await SalesTargets.findOne({ userId });
+    const Agent = await User.findOne({ _id: userId });
 
     if (salesTargets && successFormula) {
       const { __v: bs, _id: dd, userId: vv, ...salesLeft } = salesTargets._doc;
@@ -93,8 +95,9 @@ export const getEntries = async (req, res) => {
       );
 
       if (req.params?.agentId) {
+        console.log(userId);
         const result = await PAS.aggregate([
-          { $match: { userId } }, // Match documents with the specific userId
+          { $match: { userId: Agent._id } }, // Match documents with the specific userId
           {
             $group: {
               _id: null,
@@ -105,6 +108,10 @@ export const getEntries = async (req, res) => {
             },
           }, // Sum the premium_daily values
         ]);
+
+        console.log("====================================");
+        console.log(result);
+        console.log("====================================");
 
         // Extract the total value
         const totalPremiumYearly =
