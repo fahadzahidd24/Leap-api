@@ -1,5 +1,6 @@
 import SuccessFormula from "../model/successformula.model.js";
 import SalesTargets from "../model/salestargets.model.js";
+import PAS from "../model/pas.model.js";
 import { getCurrentDate } from "../utils/Date.js";
 import { calculatePAS } from "../utils/calculatePAS.js";
 
