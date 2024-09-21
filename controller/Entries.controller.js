@@ -91,6 +91,45 @@ export const getEntries = async (req, res) => {
         successLeft.salesSubmitted
       );
 
+      if (req.params?.agentId) {
+        const result = await PAS.aggregate([
+          { $match: { userId } }, // Match documents with the specific userId
+          {
+            $group: {
+              _id: null,
+              totalPremiumYearly: { $sum: { $sum: "$s_daily" } },
+              p_yearly: { $sum: "$p_daily" },
+              a_yearly: { $sum: "$a_daily" },
+              s_yearly: { $sum: { $size: "$s_daily" } },
+            },
+          }, // Sum the premium_daily values
+        ]);
+
+        // Extract the total value
+        const totalPremiumYearly =
+          result.length > 0 ? result[0].totalPremiumYearly : 0;
+        const p_yearly = result.length > 0 ? result[0].p_yearly : 0;
+        const a_yearly = result.length > 0 ? result[0].a_yearly : 0;
+        const s_yearly = result.length > 0 ? result[0].s_yearly : 0;
+
+        return res.status(200).json({
+          success: true,
+          pas: {
+            totalPremiumYearly,
+            p_yearly,
+            a_yearly,
+            s_yearly,
+            total_days: result.length || 0,
+          },
+          entries: {
+            SuccessFormula: successLeft,
+            SalesTargets: salesLeft,
+            weekly_goals,
+            daily_goals,
+          },
+        });
+      }
+
       return res.status(200).json({
         success: true,
         entries: {
