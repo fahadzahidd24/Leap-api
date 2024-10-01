@@ -5,7 +5,7 @@ import { config } from "dotenv";
 
 config();
 
-const stripPassword = (userDoc) => {
+export const stripPassword = (userDoc) => {
   const { password, ...strippedUser } = userDoc;
   return strippedUser;
 };
@@ -103,6 +103,7 @@ export const signup = async (req, res) => {
       role,
       companyName,
       profilePic: profilePicPath,
+      profession: "",
     });
 
     // Save the new user to the database

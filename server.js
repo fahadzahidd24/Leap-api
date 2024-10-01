@@ -10,6 +10,7 @@ import pasRoutes from "./router/pas.router.js";
 import locationRoutes from "./router/location.route.js";
 import eventRoutes from "./router/event.route.js";
 import improvementPlansRoutes from "./router/improvementPlans.route.js";
+import coachRoutes from "./router/coach.route.js";
 
 import Chat from "./model/chat.model.js";
 import RefreshTokens from "./model/refreshTokens.model.js";
@@ -245,6 +246,7 @@ app.use("/api", authenticate, chatRoutes);
 app.use("/api", authenticate, entriesRoutes);
 app.use("/api", authenticate, pasRoutes);
 app.use("/api", authenticate, locationRoutes);
+app.use("/api", authenticate, coachRoutes);
 app.use("/api/improvementplan", authenticate, improvementPlansRoutes);
 
 const PORT = process.env.PORT;
