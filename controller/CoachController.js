@@ -29,7 +29,10 @@ export const setProfession = async (req, res) => {
 export const openAI = async (req, res) => {
     try {
         const { _id } = req.user;
-        const {prompt} = req.body;
+        const { prompt, messages } = req.body;
+
+        console.log("Prompt", prompt);
+        console.log("Prompt", messages);
 
         const user = await User.findById(_id);
         if (!user) {
@@ -40,7 +43,22 @@ export const openAI = async (req, res) => {
             apiKey: process.env.OPENAI_API_KEY,
         });
 
-        const message = `${prompt}`
+        let message = "";
+
+        if (messages.length > 0) {
+            message = `These are the messages of our previous chat:
+            [
+            ${messages.map((msg) => `${msg.type}: ${msg.text}`).join("\n")}
+            ]
+            Please Learn from the above given array and reply according to our previous conversation. Here "sent" means sent by me, and "received" means sent by you. Ok? I'm giving you my new prompt now below, please reply with respect to our previous conversation. And please don't reply in this format of Sent: or received: just reply with the message. Here is the new prompt:
+
+            ${prompt}`
+        } else {
+            message = prompt;
+        }
+
+        console.log(message);
+
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [{ role: "user", content: message }],
